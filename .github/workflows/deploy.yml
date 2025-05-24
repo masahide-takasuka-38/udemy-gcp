@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  PROJECT_ID: \${{ secrets.GCP_PROJECT_ID }}
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   SERVICE_NAME: inventory-optimization-app
   REGION: asia-northeast1
 
@@ -21,12 +21,12 @@ jobs:
     - name: Setup Google Cloud CLI
       uses: google-github-actions/setup-gcloud@v1
       with:
-        project_id: \${{ secrets.GCP_PROJECT_ID }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
 
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v1
       with:
-        credentials_json: \${{ secrets.GCP_SA_KEY }}
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
 
     - name: Configure Docker for Google Cloud
       run: |
@@ -34,18 +34,18 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t gcr.io/\$PROJECT_ID/\$SERVICE_NAME:\$GITHUB_SHA .
+        docker build -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA .
 
     - name: Push Docker image to Container Registry
       run: |
-        docker push gcr.io/\$PROJECT_ID/\$SERVICE_NAME:\$GITHUB_SHA
+        docker push gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy \$SERVICE_NAME \
-          --image gcr.io/\$PROJECT_ID/\$SERVICE_NAME:\$GITHUB_SHA \
+        gcloud run deploy $SERVICE_NAME \
+          --image gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
           --platform managed \
-          --region \$REGION \
+          --region $REGION \
           --allow-unauthenticated \
           --memory 512Mi \
           --cpu 1 \
