@@ -6,7 +6,6 @@ on:
       - main
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   SERVICE_NAME: inventory-optimization-app
   REGION: asia-northeast1
 
@@ -18,39 +17,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Setup Google Cloud CLI
-      uses: google-github-actions/setup-gcloud@v1
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Configure Docker for Google Cloud
-      run: |
-        gcloud auth configure-docker
-
-    - name: Build Docker image
-      run: |
-        docker build -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA .
-
-    - name: Push Docker image to Container Registry
-      run: |
-        docker push gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
-
-    - name: Deploy to Cloud Run
-      run: |
-        gcloud run deploy $SERVICE_NAME \
-          --image gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
-          --platform managed \
-          --region $REGION \
-          --allow-unauthenticated \
-          --memory 512Mi \
-          --cpu 1 \
-          --timeout 60 \
-          --concurrency 80 \
-          --port 8501 \
-          --min-instances 0 \
-          --max-instances 100
+    - name: Deploy to Cloud Run from source
+      uses: google-github-actions/deploy-cloudrun@v1
+      with:
+        service: ${{ env.SERVICE_NAME }}
+        region: ${{ env.REGION }}
+        source: .
+        flags: |
+          --allow-unauthenticated
+          --memory=512Mi
+          --cpu=1
+          --timeout=60
+          --concurrency=80
+          --port=8501
+          --min-instances=0
+          --max-instances=100
